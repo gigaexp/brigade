@@ -30,3 +30,7 @@ __pycache__/
 # Local test artifacts
 .planning/
 *.local.md
+
+# But DO commit reference artifacts in examples/
+!examples/*/.planning/
+!examples/*/.planning/**
