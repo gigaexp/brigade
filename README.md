@@ -91,13 +91,13 @@ Add the marketplace, then install the plugin:
 claude plugin marketplace add gigaexp/brigade
 
 # Install in current project
-claude plugin install brigade@brigade --scope project
+claude plugin install brigade@gigaexp --scope project
 ```
 
 Or globally:
 
 ```bash
-claude plugin install brigade@brigade --scope user
+claude plugin install brigade@gigaexp --scope user
 ```
 
 After install, restart Claude Code (`/exit` and reopen) so the new commands and hooks load.

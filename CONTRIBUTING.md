@@ -56,7 +56,7 @@ as a plugin (see below), and open a PR against `main`.
 ```bash
 # In any test project directory:
 claude plugin marketplace add /absolute/path/to/your/brigade/checkout
-claude plugin install brigade@brigade --scope project
+claude plugin install brigade@gigaexp --scope project
 
 # Restart Claude Code to load the new version
 /exit
@@ -66,8 +66,8 @@ claude
 Edit files in your brigade checkout, then reload:
 
 ```bash
-claude plugin marketplace update brigade
-claude plugin update brigade@brigade --scope project
+claude plugin marketplace update gigaexp
+claude plugin update brigade@gigaexp --scope project
 # Restart Claude Code again
 ```
 

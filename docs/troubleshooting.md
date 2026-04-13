@@ -4,7 +4,7 @@ Common issues and how to fix them.
 
 ## Statusline disappeared after plugin upgrade
 
-**Symptom.** After running `claude plugin update brigade@brigade` the custom status
+**Symptom.** After running `claude plugin update brigade@gigaexp` the custom status
 line (showing model, sprint, context bar) is gone. Default Claude Code status line is shown instead.
 
 **Cause.** In brigade < 1.6.1 the `setup-statusline` hook wrote an absolute path to
@@ -134,7 +134,7 @@ the run.md model selection table picked opus too eagerly for "complex-looking" t
 one invocation per sprint. All workers default to sonnet. Power users can override
 per-role in `ROLES.md` with `model: opus` or per-task in spec frontmatter.
 
-## `brigade@claude-research` and `brigade@brigade` both show in plugin list
+## `brigade@claude-research` and `brigade@gigaexp` both show in plugin list
 
 **Symptom.** `claude plugin list` shows two brigade entries — one from local marketplace
 (`claude-research`) and one from public (`brigade`). Duplicates get confusing.
@@ -151,7 +151,7 @@ claude plugin uninstall brigade@claude-research --scope project
 # (repeat per project where it was installed)
 
 # Or the opposite:
-claude plugin uninstall brigade@brigade --scope user
+claude plugin uninstall brigade@gigaexp --scope user
 ```
 
 The duplicates are cosmetic — neither blocks the other from working. Claude Code uses

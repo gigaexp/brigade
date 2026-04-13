@@ -39,7 +39,7 @@ This is a reference project showing what `brigade` produces when given a real PR
 mkdir my-url-shortener && cd my-url-shortener
 git init
 
-claude plugin install brigade@brigade --scope project
+claude plugin install brigade@gigaexp --scope project
 # restart Claude Code
 
 /brigade:init             # pick frontend + designer + nodejs + react-basic + nodejs-fastify
