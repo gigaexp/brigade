@@ -1,6 +1,6 @@
 ---
 description: Plan a feature — brainstorm design, then break into sprint tasks with waves
-argument-hint: <feature description or goal>
+argument-hint: "[--auto-approve] [--skip-design] <feature description | @file.md>"
 ---
 
 You are running the full planning pipeline for the user's feature request. This command has
@@ -8,6 +8,23 @@ TWO phases: first a design phase (brainstorming → spec), then a sprint plannin
 (manager-agent → task specs).
 
 **HARD GATE between phases:** No sprint planning until the user approves the design.
+
+## Mode detection
+
+Check `$ARGUMENTS` for these flags:
+
+- `--auto-approve` — autopilot mode. Skip all HARD GATEs:
+  - Design approval is assumed (phase 1 still runs, writes the spec, but doesn't wait for user "yes")
+  - Architecture approval is assumed (Step 6 still runs, writes ARCHITECTURE.md, but doesn't wait)
+  - Pre-phase-2 confirmation is assumed (Step 7 skipped)
+  - Phase 1 clarifying questions still happen, but phrased as statements: "I will assume X. Say 'no' if that's wrong, otherwise I'll continue in 5 seconds."
+  - Design doc and ARCHITECTURE.md still get written — they're artifacts, not gates
+  - You still ask questions about **genuinely ambiguous** gaps (unspecified tech choices with no reasonable default)
+
+- `--skip-design` — skip phase 1 entirely. Requires a `@file.md` reference. Go straight to phase 2 with the file as the spec source. (Existing behavior, preserved.)
+
+Also read `.planning/config.json`. If `config.autonomous.enabled === true`, treat it as if
+`--auto-approve` was passed.
 
 ## Preflight
 

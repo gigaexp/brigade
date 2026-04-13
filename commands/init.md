@@ -196,7 +196,36 @@ _(to be populated)_
 _(to be populated)_
 ```
 
-### 6d. Git initialization (if not already a repo)
+### 6d. .planning/config.json — brigade project config
+
+Create `.planning/config.json` if it doesn't exist. Controls brigade behavior per-project:
+
+```json
+{
+  "review": {
+    "mode": "full"
+  },
+  "autonomous": {
+    "enabled": false,
+    "auto_apply_bug_council": false,
+    "max_retries_per_task": 3
+  }
+}
+```
+
+**Fields:**
+
+- `review.mode` — which reviewers `/brigade:run` merge gate spawns:
+  - `"full"` (default) — generalist + conditional specialists. Best quality, slower.
+  - `"basic"` — only `review-agent`. Faster, less coverage.
+  - `"custom"` — explicit list via `review.agents` (e.g. `["review-agent", "silent-failure-reviewer"]`).
+- `autonomous.enabled` (default `false`) — if `true`, skip user confirmation HARD GATEs. `/brigade:autopilot` sets this at runtime.
+- `autonomous.auto_apply_bug_council` (default `false`) — auto-create fix tasks from Bug Council synthesis.
+- `autonomous.max_retries_per_task` (default `3`) — how many model escalations before halting.
+
+**If `config.json` already exists — never overwrite.** User may have customized it.
+
+### 6e. Git initialization (if not already a repo)
 
 If the project is **not** a git repo:
 - Ask the user: "Project is not a git repo. Initialize one? (yes / no)"
@@ -207,7 +236,7 @@ If the project is **not** a git repo:
 startup. Tell the user: "Git initialized. Restart Claude Code (`/exit` then reopen) before
 running `/brigade:plan` or `/brigade:run` — worktree isolation requires a fresh session." Then stop.
 
-### 6e. Commit the bootstrap files
+### 6f. Commit the bootstrap files
 
 `/brigade:run` refuses to start on a dirty working tree, so the files you just wrote must be
 committed before this command returns. If the repo has unrelated dirty paths (the user's own

@@ -1,17 +1,41 @@
 ---
 description: Execute the current sprint wave by wave — spawns worker agents in worktrees from the top-level session
+argument-hint: "[--autonomous]"
 ---
 
 You are executing the current sprint directly in the top-level conversation. **Do not delegate orchestration to manager-agent** — Claude Code subagents cannot spawn further subagents, so the top-level session must drive the wave-by-wave execution itself.
+
+## Mode detection
+
+Check `$ARGUMENTS` for `--autonomous` flag. If present, set `autonomous_mode = true`.
+
+Also read `.planning/config.json` if it exists. If `config.autonomous.enabled === true`,
+set `autonomous_mode = true`.
+
+In autonomous mode:
+- **Auto-proceed** through waves without asking "ready to continue?"
+- **Auto-create fix tasks** on critical review findings instead of halting
+- **Auto-apply Bug Council synthesis** if `config.autonomous.auto_apply_bug_council === true`
+- **Auto-retry on API timeouts** by continuing where stopped (same as running `/brigade:resume`)
+- Halt ONLY on truly blocking issues: unresolvable merge conflicts, 5+ failed fix attempts on same task, catastrophic test suite failure
 
 ## Preflight
 
 1. Verify `.planning/tasks/ROLES.md` exists. If missing, tell the user to run `/brigade:init` first and stop.
 2. Verify the working tree is clean (`git status`). If dirty, ask the user to commit or stash and stop.
 3. Confirm you are on `main` or `master`. If not, ask the user to check out the base branch and stop.
-4. **Tell the user about the permission flow before starting.** Print a short notice:
+4. **Read `.planning/config.json`** if it exists. Parse:
+   - `config.review.mode` → controls reviewer selection at merge gate (default `full`)
+   - `config.review.agents` → explicit reviewer list when mode is `custom`
+   - `config.autonomous.*` → autonomous mode settings (see Mode detection above)
+   If config.json doesn't exist, use defaults: review.mode = `full`, autonomous.enabled = `false`.
+5. **Tell the user about the permission flow before starting.** Print a short notice:
 
    > Workers will run in **foreground** mode — you will see their progress live and may be asked to approve some tool calls (Write, Bash for git/test runners). Approve with "Allow for session" on the first call of each kind; Claude Code remembers it and subsequent calls will not prompt. The main conversation is blocked while a wave runs — you can move workers to background with `ctrl+b` if you need the chat free, but then preapprove the required tools in `~/.claude/settings.json` first.
+
+   If autonomous mode is active, also tell the user:
+
+   > Autonomous mode: no user confirmations between waves. Brigade will auto-create fix tasks on critical findings and auto-escalate to Bug Council on repeated failures. Halt only on unresolvable conflicts or catastrophic failures. Tail the session output to follow progress, or check `/brigade:status` from another terminal.
 
    Then proceed.
 
@@ -134,16 +158,18 @@ Detect the project's test command from `package.json` / `Cargo.toml` / `Makefile
 
 **Why fan-out.** A single generalist reviewer misses specialist-level bugs. Three specialists found 7 criticals that the generalist approved twice. Specialists and generalist are complementary — run both.
 
-**Scope detection — which specialists to spawn.**
+**Reviewer selection is controlled by `config.review.mode` from `.planning/config.json`** (read in preflight). Three modes:
 
-Before spawning, inspect the diff to decide which specialists are worth running. Run:
+#### Mode `full` (default) — fan-out with conditional specialists
+
+Inspect the diff to decide which specialists are worth running:
 
 ```bash
 git diff --name-only HEAD~{merged_branch_count}..HEAD
 git diff HEAD~{merged_branch_count}..HEAD
 ```
 
-Build the list of reviewers:
+Build the list:
 
 | Reviewer | Always spawn? | Spawn condition |
 |---|---|---|
@@ -152,6 +178,22 @@ Build the list of reviewers:
 | `test-coverage-reviewer` | conditional | Any file matching `.test.` / `.spec.` / `__tests__/` is in the diff |
 | `type-reviewer` | conditional | New `type`/`interface`/`struct`/`trait` declarations in the diff |
 | `designer-agent` | conditional | Diff touches `src/styles/`, `src/components/ui/`, `tailwind.config.*`, or any `.css`/`.scss`/`.module.css` file, AND ROLES.md has `designer` role |
+
+#### Mode `basic` — only generalist
+
+Spawn only `review-agent`. Faster, lower coverage. Appropriate for small sprints, prototypes,
+or when the user explicitly wants speed over depth.
+
+#### Mode `custom` — user-defined list
+
+Read `config.review.agents` from `.planning/config.json` — an array of agent names. Spawn
+exactly these agents (no conditional filtering). Example:
+```json
+"review": {
+  "mode": "custom",
+  "agents": ["review-agent", "silent-failure-reviewer"]
+}
+```
 
 All reviewers are bundled in this plugin — no external dependencies needed.
 
@@ -213,10 +255,24 @@ End your report with an explicit verdict: APPROVE / REQUEST CHANGES / NEEDS DISC
 
 Wait for all spawned reviewers to return. Read every report file written in 3c and compute a combined verdict:
 
-**Combined verdict rules:**
-- If **any** reviewer returned REQUEST CHANGES with at least one Critical finding → combined verdict is **REQUEST CHANGES** → **HALT**.
+**Combined verdict rules (interactive mode — default):**
+- If **any** reviewer returned REQUEST CHANGES with at least one Critical finding → combined verdict is **REQUEST CHANGES** → **HALT** and report to user.
 - If the worst verdict across all reviewers is `NEEDS DISCUSSION` → stop and ask the user to decide (no auto-proceed).
 - If every reviewer returned APPROVE or only warnings/suggestions → combined verdict is **APPROVE** → proceed.
+
+**Autonomous mode override:**
+
+If `autonomous_mode === true`, critical findings do NOT halt. Instead:
+
+1. **REQUEST CHANGES with Critical findings** → aggregate all critical findings into a fix task description. Spawn `manager-agent` to plan a fix wave (wave N.5) that addresses each finding as a minimal task with `model: sonnet` and `role: {appropriate role}`. Once manager returns, immediately proceed to run the fix wave like any other wave. After the fix wave completes, re-run the merge gate on the fixed commits.
+
+2. **NEEDS DISCUSSION** → still halt in autonomous mode. This verdict signals genuine ambiguity that the plugin cannot resolve safely. Print the findings and wait for the user.
+
+3. **APPROVE with warnings** → log warnings to `.planning/learnings.md` as deferred debt, proceed to next wave.
+
+4. **Track fix iterations per task:** maintain a counter. If the same task has been fixed 5+ times (5+ fix waves touching the same files), halt with "autonomous mode: too many fix iterations on {task_id}, manual intervention required."
+
+5. **Track Bug Council trigger:** if a task fails fix 3+ times, auto-invoke `/brigade:bug-council` inline. If `config.autonomous.auto_apply_bug_council === true`, create fix tasks from the Bug Council synthesis automatically. Otherwise halt with the synthesis for user review.
 
 **Write an aggregate summary** to `.planning/tasks/sprint-{N}/reviews/wave-{W}-summary.md`:
 
