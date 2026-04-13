@@ -13,22 +13,24 @@ TWO phases: first a design phase (brainstorming → spec), then a sprint plannin
 
 1. Verify `.planning/tasks/ROLES.md` exists. If missing, tell the user to run `/brigade:init` first and stop.
 
-2. **Check for `.planning/ARCHITECTURE.md`.** If missing AND the project already has source code (any of: `src/`, `apps/`, `packages/`, `lib/`, `cmd/`, `pkg/` exists with files inside), this is a brownfield project that hasn't been onboarded yet. Tell the user:
+2. **Architecture must always be agreed before sprint planning.** Check for
+   `.planning/ARCHITECTURE.md`:
 
-   ```
-   No .planning/ARCHITECTURE.md found, but this project has existing code.
+   - **Brownfield (project has source code in `src/`, `apps/`, `packages/`, `lib/`,
+     `cmd/`, `pkg/`) AND no ARCHITECTURE.md** → tell the user to run `/brigade:onboard`
+     first, stop. The architecture must be mapped from existing code before tasks can
+     be planned.
 
-   manager-agent plans tasks much better when it knows the codebase layout.
-   Strongly recommended: run `/brigade:onboard` first to scan the project
-   and produce ARCHITECTURE.md (~30 seconds).
+   - **Greenfield (no source code yet) AND no ARCHITECTURE.md** → DO NOT skip. Instead,
+     tell the user that architecture will be agreed as part of phase 1 (design phase).
+     Phase 1 will propose the project architecture from the spec, get user approval,
+     and write it to `.planning/ARCHITECTURE.md` BEFORE phase 2 runs. Set an internal
+     flag `needs_architecture = true` for use in phase 1.
 
-   Skip onboarding and continue anyway? (yes / no)
-   ```
+   - **ARCHITECTURE.md exists** → no action, proceed.
 
-   If user says no → stop and let them run onboard.
-   If user says yes → proceed without ARCHITECTURE.md, but warn manager-agent in the spawn prompt that ARCHITECTURE.md is missing so it makes more conservative decisions.
-
-   For greenfield projects (no source code yet), skip this check — there's nothing to map.
+   The principle: manager-agent must always have an agreed architecture document to
+   read. No exceptions for greenfield, no silent skips, no "trust me bro" planning.
 
 3. `manager-agent` (used in phase 2) is a **planner only** — it writes task specs and updates the sprint `_README.md`. It never spawns workers. Execution is `/brigade:run`'s job at the top level.
 
@@ -226,7 +228,106 @@ Format:
 
 Create `.planning/specs/` if it doesn't exist.
 
-## Step 6 — Ask permission to proceed to sprint planning
+## Step 6 — Architecture agreement (mandatory if `needs_architecture` flag set)
+
+If preflight set `needs_architecture = true` (greenfield project, no ARCHITECTURE.md
+exists), generate and get approval on the project architecture **before** proceeding
+to phase 2. This step is non-negotiable — manager-agent must always have an approved
+architecture document.
+
+If `.planning/ARCHITECTURE.md` already exists, skip this step.
+
+### Step 6a — Propose architecture
+
+Based on the approved design doc (the one you just wrote in Step 5), propose the project-level
+architecture. Read the design's "Approach" and "Architecture" sections and expand into a
+machine-readable map for manager-agent.
+
+Present this to the user **section by section**, asking for approval after each section. Don't
+dump the whole thing at once.
+
+Cover:
+
+1. **Project type** — `single-app` / `monorepo` / `multi-service` / `library`
+2. **Modules** — for each planned module:
+   - Name and path (e.g. `apps/api/`, `apps/web/`)
+   - Tech stack (language, framework, key libraries)
+   - Role that owns it (frontend, designer, nodejs, golang, devops)
+   - Entry point (e.g. `src/server.ts`, `src/main.tsx`)
+   - Test framework and command
+3. **Dependencies between modules** — how they communicate (REST, shared types, message queue)
+4. **Shared resources** — database, API contracts, shared types directory, CI/CD location
+5. **Build & run commands** — what the user will type to start dev/test/build
+6. **Notes for planning** — known coupling, files that change together, perf-sensitive paths
+
+### Step 6b — Write `.planning/ARCHITECTURE.md`
+
+After the user approves all sections, write the file in this exact format:
+
+```markdown
+# Architecture
+
+> Approved on {date} during /brigade:plan phase 1. Update with /brigade:onboard
+> after sprints complete to refresh from real code, or edit by hand.
+
+## Project type
+
+{type}
+
+## Modules
+
+### {module-name}
+- **Path:** `{path}/`
+- **Stack:** {language}, {framework}, {key libs}
+- **Role:** {agent-name}
+- **Entry:** `{entry-file}`
+- **Tests:** `{test-command}` ({framework})
+
+### {next module}
+...
+
+## Dependencies
+
+{module-a} → {module-b}: {how they communicate}
+...
+
+## Shared resources
+
+- **Database:** {type, schema location or "none"}
+- **API contracts:** {OpenAPI spec, proto files, shared types path, or "none"}
+- **CI/CD:** {tool, config location, or "none"}
+
+## Build & run
+
+| Command | What it does |
+|---|---|
+| `{command}` | {description} |
+
+## Notes for planning
+
+{anything manager-agent should know — known coupling, hot paths, etc.}
+```
+
+Commit the file: `git add .planning/ARCHITECTURE.md && git commit -m "docs: agree initial architecture"`.
+
+### Step 6c — Confirm and proceed
+
+Print:
+
+```
+Architecture saved to .planning/ARCHITECTURE.md
+
+Ready to break the design into sprint tasks with manager-agent? (yes / no)
+- yes → proceed to phase 2
+- no → stop here, you can run `/brigade:plan --skip-design @.planning/specs/{spec}.md`
+        later when ready
+```
+
+Wait for explicit `yes`. If `no`, stop and report that design + architecture are saved.
+
+## Step 7 — Ask permission to proceed to sprint planning
+
+(Only if Step 6 was skipped because ARCHITECTURE.md already exists.)
 
 Print:
 
@@ -283,6 +384,7 @@ After manager returns, relay its summary to the user verbatim and suggest `/brig
 ## Hard rules
 
 - **Phase 1 HARD GATE is real.** No code, no scaffolding, no manager-agent until design is approved.
+- **Architecture must always be agreed before phase 2.** No silent skips for greenfield. If `.planning/ARCHITECTURE.md` doesn't exist, generate it from the design and get user approval before spawning manager-agent.
 - **One question per message in phase 1.** Don't overwhelm with a quiz.
 - **Always present alternatives.** Even if one approach is clearly better, show at least one other option.
 - **Don't gold-plate the design.** This is a working document for `manager-agent`, not a PRD for stakeholders. Keep it actionable.
