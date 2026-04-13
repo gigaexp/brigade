@@ -1,8 +1,19 @@
+<div align="center">
+
 # brigade
 
-> Your AI dev brigade for Claude Code. One chef coordinates a team of specialist agents
-> through wave-based parallel execution, with fan-out code review and Bug Council for
-> hard problems. Zero dependencies.
+### Your AI dev brigade for Claude Code
+
+One chef coordinates a team of specialist agents through wave-based parallel execution,
+with fan-out code review and Bug Council for hard problems. **Zero dependencies.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-orange)](https://github.com/anthropics/claude-code)
+[![Version](https://img.shields.io/badge/version-1.8.1-green)](https://github.com/gigaexp/brigade/releases)
+[![Stars](https://img.shields.io/github/stars/gigaexp/brigade?style=social)](https://github.com/gigaexp/brigade)
+
+<!-- TODO: replace with real demo GIF from examples/url-shortener run -->
+<!-- ![brigade demo](./docs/demo.gif) -->
 
 ```
                                                 ┌──────────────┐
@@ -26,6 +37,12 @@
                                                    ↓
                                             wave 2 → ... → ship
 ```
+
+[Install](#install) · [Quick start](#quick-start-existing-project) · [How it works](#how-a-sprint-actually-runs) · [Commands](#commands) · [Examples](./examples) · [Roadmap](./ROADMAP.md)
+
+</div>
+
+---
 
 ## Why brigade
 
