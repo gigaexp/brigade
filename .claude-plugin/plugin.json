@@ -1,6 +1,6 @@
 {
   "name": "brigade",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Your AI dev brigade for Claude Code. A chef (sprint planner) coordinates specialist agents (frontend, designer, nodejs, golang, devops) through wave-based execution with fan-out review, Bug Council for hard bugs, and sprint learnings between iterations. Zero dependencies.",
   "author": {
     "name": "Sergey Akhantev",

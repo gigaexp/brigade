@@ -32,43 +32,64 @@ TWO phases: first a design phase (brainstorming → spec), then a sprint plannin
 
 3. `manager-agent` (used in phase 2) is a **planner only** — it writes task specs and updates the sprint `_README.md`. It never spawns workers. Execution is `/brigade:run`'s job at the top level.
 
-## Decision — does this need a design phase?
+## Decision — phase 1 mode
+
+**Phase 1 (design / brainstorming) is ALWAYS run by `/brigade:plan`** — even when the
+user provides a file reference. The file becomes input to brainstorming, not a bypass.
+
+There is exactly one escape hatch: `--skip-design` flag. Otherwise phase 1 always happens.
 
 Parse `$ARGUMENTS` and branch:
 
-**Case A — file reference (skip design).** The argument is a single `@path/to/file.md` reference:
+**Case A — file reference (input to brainstorming).** The argument is a single
+`@path/to/file.md` reference:
 - `/brigade:plan @./prd.md`
 - `/brigade:plan @.planning/specs/existing.md`
 - `/brigade:plan @~/Dropbox/features/checkout.md`
 
 Action:
-1. Read the file content.
-2. **Print a notice to the user** explaining what's happening so they're not surprised:
+1. Read the file content fully.
+2. **Print a notice to the user:**
    ```
    Detected file reference: {path}
 
-   Treating it as an approved design doc — skipping phase 1 (brainstorming).
-   Going straight to phase 2 (sprint planning with manager-agent).
+   Reading it as input to design phase. I'll review it for gaps, ask any
+   clarifying questions, and refine sections that need it. The file is a
+   starting point, not a final spec — we'll lock the final design at the
+   end of phase 1.
 
-   If you wanted to brainstorm a new design instead, cancel and run
-   `/brigade:plan <feature description>` (without @ prefix).
+   If you want to skip brainstorming entirely and use the file as-is,
+   cancel and run `/brigade:plan --skip-design @{path}`.
    ```
-3. Treat the file as the approved design doc. Skip phase 1 entirely.
-4. Go to phase 2 with this file as the spec source.
+3. Enter phase 1, but with the file content already in your context. Use it to:
+   - **Skip generic context-gathering questions** that the file already answers
+   - **Identify gaps** the file doesn't cover (error handling not specified, no acceptance criteria, ambiguous requirements)
+   - **Ask only about the gaps** (max 3-5 targeted questions)
+   - **Propose alternatives** if the file has obvious tradeoffs not discussed
+   - **Refine and finalize** — write the approved design doc as a new file in `.planning/specs/`
+4. The HARD GATE still applies: no phase 2 until user approves the refined design.
 
-**Case B — explicit `--skip-design` flag.** The user passed `--skip-design` along with
-a spec reference. Same as Case A: read the spec, skip phase 1.
+**Case B — explicit `--skip-design` flag.** The user explicitly opted out of brainstorming:
+`/brigade:plan --skip-design @path/to/spec.md`
+
+Action:
+1. Read the file as the final approved spec.
+2. Print: "Skipping design phase per --skip-design flag. Going straight to sprint planning."
+3. Skip phase 1 entirely. Go to phase 2 with this file as the spec source.
+
+This is the **only** way to bypass phase 1 with `/brigade:plan`. (For bug fixes, use
+`/brigade:fix` which is designed without a design phase.)
 
 **Case C — trivially small task.** The argument describes a typo fix, config tweak, or
-single-file bug fix. Suggest the user run `/brigade:fix` instead. If they insist on `/brigade:plan`,
-proceed to phase 1 but keep it minimal.
+single-file bug fix. Suggest the user run `/brigade:fix` instead. If they insist on
+`/brigade:plan`, proceed to phase 1 but keep it minimal.
 
 **Case D — matching existing spec.** An existing spec in `.planning/specs/` has a filename
-that matches the feature name in $ARGUMENTS. Ask: "Found existing spec at {path}. Use it,
-or write a new one?" If use → Case A. If new → Case E.
+that matches the feature name in $ARGUMENTS. Ask: "Found existing spec at {path}. Use it
+as input to brainstorming, or start fresh?" If use → Case A. If fresh → Case E.
 
 **Case E — new feature (default).** The argument is freeform feature description and no
-matching spec exists. Proceed to phase 1 (design) first. This is the normal path.
+file reference. Proceed to phase 1 from scratch.
 
 ---
 
@@ -83,14 +104,30 @@ invoke `manager-agent` until the user has approved the design.
 
 Before asking questions:
 
-1. Read `.planning/ARCHITECTURE.md` if it exists — understand what's already built.
-2. Read `.planning/tasks/ROLES.md` — understand available roles.
-3. Read `CLAUDE.md` — understand project conventions.
-4. Glance at recent git log — understand current momentum.
+1. **If Case A** (file reference) — the file content is already in your context from
+   the decision step. Treat it as the user's draft spec.
+2. Read `.planning/ARCHITECTURE.md` if it exists — understand what's already built.
+3. Read `.planning/tasks/ROLES.md` — understand available roles.
+4. Read `CLAUDE.md` — understand project conventions.
+5. Glance at recent git log — understand current momentum.
 
 If `.planning/ARCHITECTURE.md` doesn't exist, suggest running `/brigade:onboard` first for large projects. For small projects, scan the structure yourself quickly.
 
 ## Step 2 — Clarifying questions
+
+**Case A (file provided) mode:** Don't ask questions the file already answers. Read the
+file critically, then ask **only about gaps**:
+- Acceptance criteria not specified
+- Error handling not described
+- Ambiguous requirements ("should be fast" — how fast?)
+- Missing edge cases the spec doesn't cover
+- Unclear tech choices (the spec says "use a database" — which one?)
+- Out-of-scope items not explicitly excluded
+
+Max 3-5 targeted questions. If the file is comprehensive and you have no real questions,
+say so and proceed to step 3.
+
+**Case E (no file) mode:** Run a full discovery — see questions below.
 
 Ask questions **one at a time**. Focus on:
 
