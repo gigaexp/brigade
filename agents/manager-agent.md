@@ -6,7 +6,7 @@ description: >
   Use when: planning a new sprint, decomposing a goal into tasks, assigning waves.
   Triggers on: "plan sprint", "create task specs", "break down sprint goal".
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: opus
+model: sonnet
 color: pink
 ---
 
@@ -109,6 +109,9 @@ files_modify:
   - path/to/file.ts
 files_no_touch:
   - path/that/belongs/to/another/task.ts
+# model: opus    # OPTIONAL — only set if this task genuinely needs opus
+                  # (architectural work, risk: high + many files). Default is sonnet.
+                  # Do NOT set this by default — leave it out.
 ---
 
 ## Goal
@@ -150,6 +153,7 @@ The worker MUST write a regression test for each failure mode in Required Tests.
 
 Rules for task specs:
 - **WHAT not HOW.** No code snippets in the spec. The worker agent writes code.
+- **Default model is sonnet — don't write `model:` in frontmatter at all.** The `/brigade:run` orchestrator will resolve the model from ROLES.md per-role default or fall back to sonnet. Only explicitly set `model: opus` when the task genuinely needs opus (architectural decisions with multi-valid approaches, refactors with subtle invariants, security/auth work). Set `model: haiku` only for pure docs/config/version-bump tasks. **If unsure, leave the field out** — sonnet handles 95% of work.
 - **Shared contracts mandatory** when 2+ parallel tasks in the same wave touch types/schemas. This prevents `CROSS_TASK_CONTRACT_DRIFT` (one task says `originalUrl`, another says `original`, merge gate halts).
 - **Failure modes mandatory** when the task has any non-trivial logic. This prevents `HAVE_HALTED` (worker self-audit misses bug, merge gate catches it). Skip only for pure config/docs tasks.
 - **Tests are mandatory.** Every spec has a non-empty `Required Tests` section covering happy path AND each failure mode, or it is not a valid task.

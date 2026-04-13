@@ -7,7 +7,7 @@ description: >
   Triggers on: "DevOps", "infra", "pipeline", "CI/CD", "Kubernetes", "k8s", "Docker",
   "Terraform", "Helm", "deploy", "cloud", "AWS", "GCP", "Azure", "monitoring", "GitOps".
 tools: Read, Write, Edit, Glob, Grep, Bash, WebSearch, WebFetch
-model: opus
+model: sonnet
 color: yellow
 skills:
   - kubernetes-architect

@@ -136,20 +136,31 @@ Create `.planning/tasks/` if missing.
 ```markdown
 # Roles
 
-Maps project roles to agents. Edit `agent:` to override with a custom agent — `/brigade:run`
-will spawn whatever you put there. You can use:
+Maps project roles to agents. Edit any field to customize how `/brigade:run` spawns
+workers for this role.
 
-- Built-in dev agents (`frontend-agent`, `nodejs-agent`, `designer-agent`, etc.)
-- Custom project agents in `.claude/agents/<name>.md`
-- Agents from other plugins (`some-plugin:agent-name`)
+**Fields:**
+- `agent:` (required) — which agent to spawn for tasks of this role. Use:
+  - Built-in dev agents: `frontend-agent`, `designer-agent`, `nodejs-agent`, `golang-agent`, `devops-agent`
+  - Custom project agents in `.claude/agents/<name>.md`
+  - Agents from other plugins: `some-plugin:agent-name`
+- `model:` (optional) — override the default model for this role. Defaults to `sonnet`.
+  Set to `opus` for genuinely complex roles (deep architectural work) or `haiku` for trivial
+  roles (config-only). Per-task overrides in spec frontmatter take priority over this.
+- `files:` (optional) — directories this role owns. Used by manager-agent for task decomposition.
+- `stack:` (optional, free-form) — technology stack for this role's domain.
 
 ---
 
 ## {role_name}
 agent: {agent-file-name}
+model: sonnet
 files: {directories or empty}
 stack: {free-form stack description or empty}
 ```
+
+Do NOT include `model: opus` by default — only add it when the user explicitly wants
+opus for that role. The plugin default is sonnet, which works for 95% of tasks.
 
 **If `ROLES.md` already exists: never overwrite it.** Read the current file and reconcile:
 

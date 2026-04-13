@@ -60,15 +60,33 @@ in a single assistant message still run in parallel — Claude Code spawns them 
 
 ### Model selection for workers
 
-Choose the starting model based on task complexity:
+**Default: sonnet for everything.** Sonnet handles 95% of implementation tasks well and
+costs ~5x less than opus. Use opus only when explicitly required.
 
-| Signal | Model |
-|---|---|
-| Task touches ≤ 2 files, no dependencies, type is `docs`/`config`/`test` | `haiku` |
-| Default — most implementation tasks | `sonnet` |
-| Task touches ≥ 5 files, has `risk: high`, or type is `architecture`/`migration` | `opus` |
+Resolution order for the model field:
 
-**Escalation on failure:** If a worker fails (tests don't pass, can't complete the task, reports errors), re-dispatch the SAME task with the next tier model:
+1. **Task spec frontmatter** — if the task spec has `model: opus` (or `haiku`/`sonnet`),
+   use it. This is the highest priority — it's what the planner explicitly chose for this
+   task.
+
+2. **ROLES.md per-role default** — if the role's section in `.planning/tasks/ROLES.md`
+   has a `model:` line, use it as the default for tasks of that role.
+
+3. **Plugin default** — `sonnet`. Period.
+
+Examples of when planner sets `model: opus` in a spec (rare):
+- Task explicitly tagged `risk: high` AND touches ≥ 5 files
+- Type is `architecture` or `migration`
+- Task involves cross-cutting refactor with subtle invariants
+
+Examples of when to use `model: haiku` (very rare):
+- Pure docs/config tasks: README updates, env var renames, version bumps
+
+**Do NOT default to opus for "complex-looking" tasks.** Sonnet is the default. The user
+can always override per-role in ROLES.md or per-task in the spec.
+
+**Escalation on failure:** If a worker fails (tests don't pass, can't complete the task,
+reports errors), re-dispatch the SAME task with the next tier model:
 - `haiku` → `sonnet` → `opus`
 - `sonnet` → `opus`
 - `opus` → `opus` (retry once, then HALT and report to user)
