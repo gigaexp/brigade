@@ -71,7 +71,7 @@ Add the marketplace, then install the plugin:
 
 ```bash
 # Add brigade marketplace (one-time)
-claude plugin marketplace add ushibo/brigade
+claude plugin marketplace add gigaexp/brigade
 
 # Install in current project
 claude plugin install brigade@brigade --scope project
