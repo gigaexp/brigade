@@ -1,0 +1,36 @@
+{
+  "name": "brigade",
+  "description": "Marketplace for brigade — your AI dev brigade for Claude Code",
+  "owner": {
+    "name": "Sergey Akhantev",
+    "email": "ushibo.dev@gmail.com",
+    "url": "https://github.com/ushibo"
+  },
+  "plugins": [
+    {
+      "name": "brigade",
+      "description": "Your AI dev brigade for Claude Code. A chef (sprint planner) coordinates specialist agents (frontend, designer, nodejs, golang, devops) through wave-based execution with fan-out review, Bug Council for hard bugs, and sprint learnings between iterations. Zero dependencies.",
+      "version": "1.3.1",
+      "source": "./",
+      "category": "development",
+      "author": {
+        "name": "Sergey Akhantev",
+        "email": "ushibo.dev@gmail.com",
+        "url": "https://github.com/ushibo"
+      },
+      "homepage": "https://github.com/ushibo/brigade",
+      "repository": "https://github.com/ushibo/brigade",
+      "license": "MIT",
+      "keywords": [
+        "claude-code",
+        "multi-agent",
+        "sprint",
+        "code-review",
+        "ai-development",
+        "fullstack",
+        "worktree",
+        "bug-council"
+      ]
+    }
+  ]
+}
