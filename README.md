@@ -216,7 +216,7 @@ recommendation. Never auto-applies — you read the synthesis and decide.
     │   ├─ type-reviewer (if new types in diff)
     │   └─ designer-agent (if styles/UI in diff)
     ├─ Aggregate verdict — halt on critical findings
-    ├─ Wave cost summary: tasks, models, escalations, verdict
+    ├─ Pattern sweep (only on fix waves) — catches similar bugs elsewhere
     └─ Update task statuses → done, commit
 
   Wave 2 (parallel) — depends on wave 1

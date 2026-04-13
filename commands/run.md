@@ -267,21 +267,7 @@ Wait for all spawned reviewers to return. Read every report file written in 3c a
 - Print the aggregate summary in 2–3 lines (counts only).
 - Proceed.
 
-### 3e. Wave cost summary
-
-After review, print a short cost summary for the wave:
-
-```
-Wave {W} summary:
-  Tasks: {N} completed
-  Workers: {list of agent types used}
-  Models: {list of models used, note any escalations}
-  Review: {verdict} ({N} reviewers, {N} critical, {N} warnings)
-```
-
-This gives the user visibility into what happened without a full dashboard.
-
-### 3f. Pattern sweep after fix waves
+### 3e. Pattern sweep after fix waves
 
 **Only if this wave was a fix wave** (running tasks created to address findings from a
 previous wave's review gate, e.g. wave 1.5 fixing wave 1 findings), spawn `pattern-matcher`
@@ -322,14 +308,14 @@ Act on pattern-matcher's verdict:
 
 If the wave was a regular planned wave (not a fix wave), skip this step entirely.
 
-### 3g. Update task statuses
+### 3f. Update task statuses
 
 For each task in the wave that was merged successfully:
 1. Open its spec file, change `status: todo` → `status: done`.
 2. Update `_README.md` to reflect completed tasks.
 3. Commit with message `chore: complete wave {W} of sprint {N}` together with the review report file.
 
-### 3h. Branch cleanup
+### 3g. Branch cleanup
 
 ```bash
 git branch --merged main | grep -E '^\s*feat/' | xargs -r git branch -d
