@@ -6,7 +6,7 @@ description: >
   Use when: planning a new sprint, decomposing a goal into tasks, assigning waves.
   Triggers on: "plan sprint", "create task specs", "break down sprint goal".
 tools: Read, Write, Edit, Glob, Grep, Bash
-model: sonnet
+model: opus
 color: pink
 ---
 
