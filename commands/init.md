@@ -204,11 +204,6 @@ Create `.planning/config.json` if it doesn't exist. Controls brigade behavior pe
 {
   "review": {
     "mode": "full"
-  },
-  "autonomous": {
-    "enabled": false,
-    "auto_apply_bug_council": false,
-    "max_retries_per_task": 3
   }
 }
 ```
@@ -219,9 +214,6 @@ Create `.planning/config.json` if it doesn't exist. Controls brigade behavior pe
   - `"full"` (default) — generalist + conditional specialists. Best quality, slower.
   - `"basic"` — only `review-agent`. Faster, less coverage.
   - `"custom"` — explicit list via `review.agents` (e.g. `["review-agent", "silent-failure-reviewer"]`).
-- `autonomous.enabled` (default `false`) — if `true`, skip user confirmation HARD GATEs. `/brigade:autopilot` sets this at runtime.
-- `autonomous.auto_apply_bug_council` (default `false`) — auto-create fix tasks from Bug Council synthesis.
-- `autonomous.max_retries_per_task` (default `3`) — how many model escalations before halting.
 
 **If `config.json` already exists — never overwrite.** User may have customized it.
 

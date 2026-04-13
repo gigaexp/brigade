@@ -2,12 +2,20 @@
 
 Planned improvements and known gaps. Grouped by feature.
 
-## Autopilot (v1.7.0 introduced, needs hardening)
+## Autopilot (deferred)
 
-The `/brigade:autopilot` command ships in 1.7.0 but has not been tested end-to-end on a
-real project. The design is complete, the mechanics are documented in the command file,
-but several real-world concerns are unresolved. Before claiming autopilot is production-ready,
-these need to be addressed.
+> **Status: reverted in 1.8.0, deferred until brigade core is battle-tested.**
+>
+> An initial `/brigade:autopilot` implementation shipped in 1.7.0 but was removed in 1.8.0
+> before ever running on a real project. Reason: the feature depends on solid foundations
+> (`/brigade:resume`, `/brigade:status`, `/brigade:bug-council`) that themselves haven't
+> been production-tested. Shipping autopilot on top of untested commands multiplies risk.
+>
+> The design below is preserved as a blueprint for when we come back to it.
+
+The original plan was to ship `/brigade:autopilot` as a walk-away mode: launch with a
+spec, come back when it's done or stuck. Before that can work for real, these items must
+be addressed.
 
 ### Critical (must have for true walk-away)
 
